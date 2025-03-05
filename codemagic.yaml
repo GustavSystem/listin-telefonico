@@ -1,0 +1,33 @@
+workflows:
+  ios-workflow:
+    name: iOS Workflow
+    max_build_duration: 60
+    environment:
+      mac:
+        xcode: latest
+      vars:
+        XCODE_WORKSPACE: "ios/Runner.xcworkspace"
+        XCODE_SCHEME: "Runner"
+        BUNDLE_ID: "com.example.listin_telefonico"
+        APP_STORE_CONNECT_USERNAME: # Tu Apple ID
+        APP_STORE_CONNECT_PASSWORD: # Tu contraseña de Apple ID
+        APP_STORE_CONNECT_TEAM_ID: # Tu Team ID de Apple
+        CERTIFICATE_PRIVATE_KEY: # Tu clave privada del certificado
+        CERTIFICATE_PASSWORD: # Contraseña del certificado
+        PROVISIONING_PROFILE: # Tu perfil de aprovisionamiento
+    scripts:
+      - name: Get Flutter packages
+        script: |
+          flutter pub get
+      - name: Install pods
+        script: |
+          find . -name "Podfile" -execdir pod install \;
+      - name: Flutter build ipa
+        script: |
+          flutter build ipa --release \
+            --export-options-plist=ios/ExportOptions.plist
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      flutter_drive:
+        - build/ios/iphoneos/*.app 
