@@ -1,0 +1,7 @@
+{
+  "name": "Hospital Directory",
+  "description": "A comprehensive telephone directory for Hospital Materno & Insular with voice search and favorites.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

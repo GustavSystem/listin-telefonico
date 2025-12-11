@@ -1,0 +1,22 @@
+{
+  "name": "Listín Hospital Materno & Insular",
+  "short_name": "Listín",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#eff6ff",
+  "theme_color": "#2563eb",
+  "description": "Directorio telefónico del Hospital Materno e Insular",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512"
+    },
+    {
+      "src": "icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192"
+    }
+  ]
+}
