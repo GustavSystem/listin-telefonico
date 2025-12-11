@@ -7,7 +7,7 @@ import BottomNav from './components/BottomNav';
 import AddContactForm from './components/AddContactForm';
 import { 
   Info, Database, Activity, Pill, Siren, Monitor, Baby, 
-  Wrench, Star, Settings, Plus, Trash2, Check, Tag as TagIcon 
+  Wrench, Star, Settings, Plus, Trash2, Check, Tag as TagIcon, Download 
 } from 'lucide-react';
 
 // Interface for Quick Tags
@@ -51,6 +51,9 @@ const App: React.FC = () => {
   const [newTagLabel, setNewTagLabel] = useState('');
   const [newTagTerm, setNewTagTerm] = useState('');
 
+  // PWA Install Prompt State
+  const [installPrompt, setInstallPrompt] = useState<any>(null);
+
   const loadDefaultContacts = async () => {
     try {
       const response = await fetch('assets/MATERNO-2025.csv');
@@ -60,7 +63,7 @@ const App: React.FC = () => {
       setContacts(initial);
     } catch (error) {
       console.error("Error loading default CSV", error);
-      alert("Error al cargar la base de datos original.");
+      // Don't alert on error, just fail silently to empty state if offline/missing
     }
   };
 
@@ -99,6 +102,18 @@ const App: React.FC = () => {
       setIsLoaded(true);
     };
     initData();
+
+    // Listen for PWA install event
+    const handleBeforeInstallPrompt = (e: any) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
   }, []);
 
   useEffect(() => {
@@ -172,6 +187,16 @@ const App: React.FC = () => {
     if (!showDirectory && !searchQuery && currentView === ViewState.HOME) {
       setShowDirectory(true);
     }
+  };
+
+  const handleInstallClick = () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    installPrompt.userChoice.then((choiceResult: any) => {
+      if (choiceResult.outcome === 'accepted') {
+        setInstallPrompt(null);
+      }
+    });
   };
 
   // --- Tag Management ---
@@ -289,16 +314,27 @@ const App: React.FC = () => {
             <div className="animate-fadeIn">
               
               {/* Stats Card */}
-              <div className="bg-white/10 backdrop-blur-sm border border-white/20 py-2 px-3 rounded-2xl text-white shadow-lg relative overflow-hidden group">
+              <div className="bg-white/10 backdrop-blur-sm border border-white/20 py-3 px-3 rounded-2xl text-white shadow-lg relative overflow-hidden group">
                 <div className="relative z-10 flex flex-col items-center text-center">
                   <h1 className="text-xl font-bold mb-0.5">Listín Telefónico</h1>
-                  <p className="text-blue-100 text-xs mb-1.5">Hospital Materno & Insular</p>
+                  <p className="text-blue-100 text-xs mb-2">Hospital Materno & Insular</p>
                   
-                  <div className="flex items-center justify-center">
+                  <div className="flex items-center justify-center gap-2">
                     <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-medium flex items-center backdrop-blur-md border border-white/10">
                       <Database size={12} className="mr-1.5 opacity-80" />
                       {contacts.length} contactos
                     </span>
+                    
+                    {/* INSTALL BUTTON: Only visible if browser supports it */}
+                    {installPrompt && (
+                      <button 
+                        onClick={handleInstallClick}
+                        className="bg-white text-blue-600 px-3 py-1 rounded-full text-xs font-bold flex items-center shadow-md animate-pulse hover:scale-105 transition-transform"
+                      >
+                        <Download size={12} className="mr-1.5" />
+                        INSTALAR APP
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
