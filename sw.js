@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hospital-listin-v16';
+const CACHE_NAME = 'hospital-listin-v17';
 const ASSETS_TO_CACHE = [
   './',
   'index.html',
