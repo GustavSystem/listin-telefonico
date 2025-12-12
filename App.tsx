@@ -224,9 +224,6 @@ const App: React.FC = () => {
   const deleteSelectedTags = () => {
     if (selectedTagsToDelete.length === 0) return;
     
-    // DIRECT DELETE: Removed window.confirm to avoid Android WebView blocking issues.
-    // The explicit "Delete" button action is confirmation enough.
-    
     const newTags = quickTags.filter(t => !selectedTagsToDelete.includes(t.id));
     setQuickTags(newTags);
     
@@ -420,22 +417,15 @@ const App: React.FC = () => {
                 )}
               </div>
 
-              {/* Bulk Delete Action Button - Only visible in Manage Mode */}
-              {isManagingTags && (
-                 <div className="animate-in slide-in-from-bottom-4 duration-300 fixed bottom-24 left-0 w-full px-6 z-30">
+              {/* Bulk Delete Action Button - UPDATED: Compact Floating Pill */}
+              {isManagingTags && selectedTagsToDelete.length > 0 && (
+                 <div className="fixed bottom-20 left-0 w-full flex justify-center z-30 pointer-events-none">
                     <button
                       onClick={deleteSelectedTags}
-                      disabled={selectedTagsToDelete.length === 0}
-                      className={`w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 shadow-xl transition-all ${
-                        selectedTagsToDelete.length > 0
-                          ? 'bg-red-600 text-white hover:bg-red-700 active:scale-95'
-                          : 'bg-gray-800 text-gray-500 cursor-not-allowed opacity-80'
-                      }`}
+                      className="pointer-events-auto bg-red-600 text-white px-6 py-3 rounded-full shadow-xl shadow-red-500/40 font-bold text-sm flex items-center gap-2 animate-in slide-in-from-bottom-4 fade-in duration-200 active:scale-95 transition-transform"
                     >
-                      <Trash2 size={20} />
-                      {selectedTagsToDelete.length > 0 
-                        ? `ELIMINAR ${selectedTagsToDelete.length} SELECCIONADOS` 
-                        : 'SELECCIONA PARA ELIMINAR'}
+                      <Trash2 size={18} />
+                      <span>Eliminar {selectedTagsToDelete.length}</span>
                     </button>
                  </div>
               )}
