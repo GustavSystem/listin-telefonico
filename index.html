@@ -70,7 +70,7 @@
         Search, Mic, X, MicOff, Phone, Star, PhoneForwarded, MapPin, 
         Pencil, Trash2, Copy, Check, Share2, BookUser, Plus, Save, 
         ArrowLeft, AlertTriangle, Info, Database, Activity, Pill, Siren, 
-        Monitor, Baby, Wrench, Settings, Tag as TagIcon, Download 
+        Monitor, Baby, Wrench, Settings, Tag as TagIcon, Download, RefreshCw
       } from 'lucide-react';
 
       // --- UTILS ---
@@ -154,6 +154,69 @@
       };
 
       // --- COMPONENTS ---
+
+      // Update Prompt Component
+      const UpdatePrompt = () => {
+        const [waitingWorker, setWaitingWorker] = useState(null);
+
+        useEffect(() => {
+          if ('serviceWorker' in navigator) {
+            // Prevent error in non-http environments
+            if (!window.location.protocol.startsWith('http')) return;
+
+            navigator.serviceWorker.register('./sw.js').then((registration) => {
+              // Check if there is already a waiting worker
+              if (registration.waiting) {
+                setWaitingWorker(registration.waiting);
+              }
+
+              registration.addEventListener('updatefound', () => {
+                const newWorker = registration.installing;
+                if (!newWorker) return;
+                
+                newWorker.addEventListener('statechange', () => {
+                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    setWaitingWorker(newWorker);
+                  }
+                });
+              });
+            }).catch(err => console.log('SW Reg Failed', err));
+
+            let refreshing = false;
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+              if (!refreshing) {
+                window.location.reload();
+                refreshing = true;
+              }
+            });
+          }
+        }, []);
+
+        const handleUpdate = () => {
+          if (waitingWorker) {
+            waitingWorker.postMessage({ type: 'SKIP_WAITING' });
+          }
+        };
+
+        if (!waitingWorker) return null;
+
+        return (
+          <div className="fixed top-20 left-4 right-4 bg-blue-900/95 backdrop-blur shadow-2xl p-4 rounded-xl z-[60] flex items-center justify-between border border-blue-700 animate-slideUp">
+            <div className="flex items-center text-white">
+              <div className="bg-blue-800 p-2 rounded-lg mr-3">
+                <RefreshCw size={20} className="animate-spin-slow" />
+              </div>
+              <div>
+                <p className="font-bold text-sm">Actualización disponible</p>
+                <p className="text-[10px] text-blue-200">Nueva versión lista</p>
+              </div>
+            </div>
+            <button onClick={handleUpdate} className="bg-white text-blue-900 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider shadow-sm active:scale-95 transition-transform">
+              Actualizar
+            </button>
+          </div>
+        );
+      };
 
       // 1. SearchBar
       const SearchBar = ({ value, onChange }) => {
@@ -438,6 +501,8 @@
 
         return (
           <div className="flex flex-col h-screen bg-gray-50 font-sans">
+            <UpdatePrompt />
+            
             <div className="flex-1 flex flex-col z-10 overflow-hidden">
               <SearchBar value={searchQuery} onChange={setSearchQuery} />
               
@@ -531,17 +596,5 @@
       root.render(<App />);
     </script>
     
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          // Prevent error in non-http environments (like local file system or some previews)
-          if (window.location.protocol.startsWith('http')) {
-             navigator.serviceWorker.register('./sw.js')
-                .then(reg => console.log('SW ok', reg.scope))
-                .catch(err => console.log('SW failed', err));
-          }
-        });
-      }
-    </script>
 </body>
 </html>
