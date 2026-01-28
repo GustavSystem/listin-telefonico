@@ -17,7 +17,8 @@
     <link rel="apple-touch-icon" href="icon.svg">
     <link rel="manifest" href="manifest.json">
 
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind Play CDN - Fixed Version -->
+    <script src="https://cdn.tailwindcss.com/3.4.1"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
     <style>
@@ -31,6 +32,9 @@
       
       @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
       .animate-slideUp { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+      
+      @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      .animate-spin-slow { animation: spin-slow 3s linear infinite; }
     </style>
 
     <script type="importmap">
@@ -40,8 +44,8 @@
     "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
     "react/jsx-runtime": "https://esm.sh/react@18.2.0/jsx-runtime",
     "lucide-react": "https://esm.sh/lucide-react@0.344.0?deps=react@18.2.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/"
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/"
   }
 }
 </script>
@@ -49,7 +53,6 @@
 <body class="bg-gray-100 text-gray-900 antialiased select-none">
     <div id="root">
       <!-- SPLASH SCREEN / LOADING STATE -->
-      <!-- This shows immediately before React loads, preventing the white screen -->
       <div class="fixed inset-0 bg-blue-600 flex flex-col items-center justify-center text-white z-50">
          <div class="animate-pulse flex flex-col items-center">
             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -57,7 +60,7 @@
                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
             </svg>
             <h1 class="text-2xl font-bold mt-4">Listín</h1>
-            <p class="text-sm opacity-80 mt-1">Cargando...</p>
+            <p class="text-sm opacity-80 mt-1">Iniciando aplicación...</p>
          </div>
       </div>
     </div>
@@ -153,27 +156,21 @@
         return result;
       };
 
-      // --- COMPONENTS ---
-
       // Update Prompt Component
       const UpdatePrompt = () => {
         const [waitingWorker, setWaitingWorker] = useState(null);
 
         useEffect(() => {
           if ('serviceWorker' in navigator) {
-            // Prevent error in non-http environments
             if (!window.location.protocol.startsWith('http')) return;
 
             navigator.serviceWorker.register('./sw.js').then((registration) => {
-              // Check if there is already a waiting worker
               if (registration.waiting) {
                 setWaitingWorker(registration.waiting);
               }
-
               registration.addEventListener('updatefound', () => {
                 const newWorker = registration.installing;
                 if (!newWorker) return;
-                
                 newWorker.addEventListener('statechange', () => {
                   if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                     setWaitingWorker(newWorker);
@@ -218,7 +215,7 @@
         );
       };
 
-      // 1. SearchBar
+      // SearchBar
       const SearchBar = ({ value, onChange }) => {
         const [isListening, setIsListening] = useState(false);
         const [recognition, setRecognition] = useState(null);
@@ -263,7 +260,7 @@
         );
       };
 
-      // 2. ContactCard
+      // ContactCard
       const ContactCard = ({ contact, isFavorite, onToggleFavorite, onEdit, onDelete }) => {
         const [isDeleting, setIsDeleting] = useState(false);
         const [copiedField, setCopiedField] = useState(null);
@@ -337,7 +334,7 @@
         );
       };
 
-      // 3. BottomNav
+      // BottomNav
       const BottomNav = ({ currentView, onChangeView }) => {
         const navItemClass = (view) => `flex flex-col items-center justify-center w-full h-full transition-all duration-200 ${currentView === view ? 'text-blue-600 scale-105' : 'text-gray-400'}`;
         return (
@@ -353,7 +350,7 @@
         );
       };
 
-      // 4. AddContactForm
+      // AddContactForm
       const AddContactForm = ({ initialData, onSave, onCancel }) => {
         const [formData, setFormData] = useState(initialData || { id: '', centro: 'MATERNO', edificio: '', planta: '', servicio: '', interno: '', externo: '' });
         const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -386,7 +383,7 @@
         );
       };
 
-      // --- APP COMPONENT ---
+      // APP COMPONENT
       const DEFAULT_TAGS = [
         { id: '1', label: 'Urgencias', iconName: 'Siren', color: 'bg-red-100 text-red-600', term: 'Urgencias' },
         { id: '2', label: 'Farmacia', iconName: 'Pill', color: 'bg-green-100 text-green-600', term: 'Farmacia' },
@@ -414,7 +411,6 @@
 
         useEffect(() => {
           const loadData = async () => {
-            // Load Contacts
             const stored = localStorage.getItem('app_contacts');
             if (stored) setContacts(JSON.parse(stored));
             else {
@@ -426,7 +422,6 @@
                 }
               } catch (e) { console.error(e); }
             }
-            // Load Favorites & Tags
             const favs = localStorage.getItem('favorites');
             if (favs) setFavorites(JSON.parse(favs));
             const tags = localStorage.getItem('app_quick_tags');
@@ -434,7 +429,6 @@
           };
           loadData();
 
-          // PWA Install Prompt
           const handleBeforeInstallPrompt = (e) => {
             e.preventDefault();
             setInstallPrompt(e);
@@ -595,6 +589,5 @@
       const root = createRoot(document.getElementById('root'));
       root.render(<App />);
     </script>
-    
 </body>
 </html>

@@ -1,11 +1,11 @@
-const CACHE_NAME = 'hospital-listin-v22';
+const CACHE_NAME = 'hospital-listin-v23';
 const ASSETS_TO_CACHE = [
   './',
   'index.html',
   'manifest.json',
   'icon.svg',
   'assets/MATERNO-2025.csv',
-  'https://cdn.tailwindcss.com',
+  'https://cdn.tailwindcss.com/3.4.1',
   'https://unpkg.com/@babel/standalone/babel.min.js',
   'https://esm.sh/react@18.2.0',
   'https://esm.sh/react-dom@18.2.0/client',
@@ -14,15 +14,16 @@ const ASSETS_TO_CACHE = [
 ];
 
 self.addEventListener('install', (event) => {
-  // Note: We removed self.skipWaiting() to allow the user to control the update via UI
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return Promise.all(
         ASSETS_TO_CACHE.map(url => {
-          return fetch(url, { mode: 'cors', credentials: 'omit' }).then(response => {
-            if (!response.ok) {
-              throw new Error('Request for ' + url + ' failed with status ' + response.status);
-            }
+          // Use 'no-cors' for external CDN assets to avoid CORS issues during caching
+          const request = new Request(url, { 
+            mode: url.includes('http') ? 'no-cors' : 'cors',
+            credentials: 'omit'
+          });
+          return fetch(request).then(response => {
             return cache.put(url, response);
           }).catch(err => {
              console.error('Failed to cache ' + url, err);
