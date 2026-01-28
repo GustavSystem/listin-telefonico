@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hospital-listin-v23';
+const CACHE_NAME = 'hospital-listin-v24';
 const ASSETS_TO_CACHE = [
   './',
   'index.html',
@@ -16,17 +16,16 @@ const ASSETS_TO_CACHE = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
+      // Use standard fetching. CDNs like esm.sh support CORS and React modules REQUIRES it.
+      // Opaque responses (no-cors) break module scripts.
       return Promise.all(
         ASSETS_TO_CACHE.map(url => {
-          // Use 'no-cors' for external CDN assets to avoid CORS issues during caching
-          const request = new Request(url, { 
-            mode: url.includes('http') ? 'no-cors' : 'cors',
-            credentials: 'omit'
-          });
-          return fetch(request).then(response => {
-            return cache.put(url, response);
+          return fetch(url).then(response => {
+            if (response.ok) {
+              return cache.put(url, response);
+            }
           }).catch(err => {
-             console.error('Failed to cache ' + url, err);
+             console.error('Failed to cache during install: ' + url, err);
           });
         })
       );
@@ -60,10 +59,8 @@ self.addEventListener('fetch', (event) => {
       if (response) {
         return response;
       }
-      const fetchRequest = event.request.clone();
-      return fetch(fetchRequest).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200 || 
-           (networkResponse.type !== 'basic' && networkResponse.type !== 'cors')) {
+      return fetch(event.request).then((networkResponse) => {
+        if (!networkResponse || networkResponse.status !== 200) {
           return networkResponse;
         }
         const responseToCache = networkResponse.clone();
